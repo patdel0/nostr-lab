@@ -13,7 +13,6 @@ socket.addEventListener("message", async (message) => {
   console.log({ type, subId, event })
 
   let { kind, content } = event || {}
-  console.log({ kind, content })
 
   if (!event || event === true) return
   console.log('message:', event)
@@ -33,3 +32,18 @@ socket.addEventListener("open", async () => {
   const subscription = ["REQ", subId, filter]
   socket.send(JSON.stringify(subscription))
 })
+
+async function getSignedEvent(event, privateKey) {
+  const eventData = JSON.stringify([
+    0,
+    event['pubkey'],
+    event['created_at'],
+    event['kind'],
+    event['tags'],
+    event['content']
+  ])
+  event.id = sha256(eventData).toString('hex')
+  event.sig = await schnorr.sign(event.id, privateKey)
+  return event
+}
+
